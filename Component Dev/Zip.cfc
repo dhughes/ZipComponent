@@ -1,25 +1,14 @@
 <cfcomponent hint="I am a component which can read, write and manipulate zip files.">
 
-	<cfset variables.version = "1.2" />
+	<cfset variables.version = "${version}" />
 
 	<cffunction name="init" access="public" output="false" returntype="WEB-INF.cftags.component" hint="I configure and return an instance of the Zip component.">
 		<cfargument name="pathToZipFile" hint="I am the path to the zip file we are working with.  If I don't exist I will be created as needed." required="yes" type="string" />
-		<cfargument name="key" hint="I am the license key to use." required="no" type="string" default="" />
 		<cfset setPathToZipFile(arguments.pathToZipFile) />
 		<cfset setCompression(6) />
-		<cfset variables.licensed = false />	
-		<cfset variables.key = "" />	
 		<cfset variables.testMethodExecuted = false />
 		<cfset variables.appText = "Z!pC0mponentW@sDel@yedBecauseM!fir5tKidLearnedToR!deH!sTr!keToday" />
-		<cfset variables.charString = "0123456789ABCDEFGHJKLMNPQRTUVWXY" />
-		
-		<!--- set the key --->
-		<cfif Len(arguments.key)>
-			<cfset setKey(arguments.key) />
-		<cfelse>
-			<cfset loadLicenseFile() />
-		</cfif>
-		
+				
 		<!--- return the image object. --->
 		<cfreturn this />
 	</cffunction>
@@ -28,34 +17,7 @@
 	<cffunction name="getVersion" access="public" hint="I return the zip component's version number" output="false" returntype="string">
 		<cfreturn variables.version />
 	</cffunction>	
-	
-	<!--- loadLicenseFile --->
-	<cffunction name="loadLicenseFile" access="private" output="false" returntype="void" hint="I check for the existance of (and contents of) captchakey.txt and load it as the license key, if it exists.">
-		<cfset var zipKey = getDirectoryFromPath(getCurrentTemplatePath()) & "zipkey.txt" />
-		<cfset var key = "" />
 		
-		<!--- look for a file named zipkey.txt --->
-		<cfif FileExists(zipKey)>
-			<!--- read the key file, if possible --->
-			<cffile action="read"
-				file="#zipKey#"
-				variable="key" />
-			<!--- set the key (if not valid it won't be licensed) --->
-			<cfset setKey(trim(key)) />
-		</cfif>
-	</cffunction>
-	
-	<!--- checkLicense --->
-	<cffunction name="checkLicense" access="private" hint="I check the compoent configuration." output="false" returntype="void">
-		<cfif NOT getLicensed()>
-			<cfif variables.testMethodExecuted>
-				<cfthrow message="Zip Component Not Licensed" detail="Thank you for trying out the Alagad Zip Component.  You have not provided a valid license key so this component is running in trial mode.  In trial mode you can only execute one method other than the init(), getCompression(), setCompression(), entryExists(), isDirectory() and isFile() methods.  By providing a license key you can remove this limitation." type="Zip.checkLicense.ZipComponentNotLicensed" />
-			<cfelse>
-				<cfset variables.testMethodExecuted = true />
-			</cfif>
-		</cfif>
-	</cffunction>
-	
 	<!--- list --->
 	<cffunction name="list" access="public" hint="I return a query of all the files in this zip document." output="false" returntype="query">
 		<cfset var qList = QueryNew("directory,file,fullPath,compressedSize,uncompressedSize,lastModified") />
@@ -63,7 +25,7 @@
 		<cfset var ZipEntries = 0 />
 		<cfset var Date = 0 />
 		
-		<cfset checkLicense() />
+		
 		
 		<cfif FileExists(getPathToZipFile())>
 			<cfset ZipFile = readZipFile() />
@@ -115,7 +77,7 @@
 		<cfset var x = 0 />
 		<cfset var zipFileName = "" />
 
-		<cfset checkLicense() />
+		
 		
 		<!--- insure the directory exists and is not a file --->
 		<cfif NOT Directory.exists()>
@@ -255,7 +217,7 @@
 		<cfset var FileOutputStream = 0 />
 		<cfset var BufferedOutputStream = 0 />
 		
-		<cfset checkLicense() />
+		
 		
 		<!--- loop over all the entries in the zip file --->
 		<cfloop condition="#ZipEntries.hasMoreElements()#">
@@ -304,7 +266,7 @@
 		<cfset var NewZipEntry = 0 />
 		<cfset var ZipInputStream = 0 />
 		
-		<cfset checkLicense() />
+		
 		
 		<!--- normalize the pathToZippedDirectory name ---> 
 		<cfset arguments.pathToZippedDirectory = normalizeEntryName(arguments.pathToZippedDirectory & "/") />
@@ -376,7 +338,7 @@
 		<cfset var File = CreateObject("Java", "java.io.File").init(arguments.extractToDirectory) />
 		<cfset var extract = false />
 		
-		<cfset checkLicense() />
+		
 		
 		<!--- insure the directory entry exists in the zip file --->
 		<cfif NOT isDirectory(arguments.pathToZippedDirectory)>
@@ -476,7 +438,7 @@
 			<cfset zipFileName = normalizeEntryName(arguments.pathToZipEntry) />
 		</cfif>
 		
-		<cfset checkLicense() />
+		
 		
 		<!--- make sure the file to add exists --->
 		<cfif DirectoryExists(arguments.pathToFile)>
@@ -682,7 +644,6 @@
 	<cffunction name="writeAsTextFile" access="public" hint="I write the text contents passed in to the specified file in the zip document." output="false" returntype="string">
 		<cfargument name="pathToZippedFile" hint="I am the path to the file in the zip file to write." required="yes" type="string" />
 		<cfargument name="contents" hint="I am the contents to write to the file." required="yes" type="string" />
-		<!--- I'm not checking the license here because I'm just going to call writeAsBinaryFile --->
 		<cfset writeAsBinaryFile(arguments.pathToZippedFile, arguments.contents.getBytes()) />
 	</cffunction>
 	
@@ -704,7 +665,7 @@
 		<!---<cfset var SourceFile = 0 />
 		<cfset var Destination = CreateObject("Java", "java.io.File").init(JavaCast("String", getPathToZipFile())) />--->
 		
-		<cfset checkLicense() />
+		
 		
 		<!--- make sure the zipFileName is a file and not a directory --->
 		<cfif NOT Len(GetFileFromPath(zipFileName))>
@@ -777,7 +738,7 @@
 	<cffunction name="readAsTextFile" access="public" hint="I read an entry from the zip file and return it as text." output="false" returntype="string">
 		<cfargument name="pathToZipEntry" hint="I am the path to the entry in the zip file to read." required="yes" type="string" />
 		
-		<cfset checkLicense() />
+		
 		
 		<cfreturn readFile(arguments.pathToZipEntry).toString() />
 	</cffunction>
@@ -786,7 +747,7 @@
 	<cffunction name="readAsBinaryFile" access="public" hint="I read an entry from the zip file and return it as binary data." output="false" returntype="binary">
 		<cfargument name="pathToZipEntry" hint="I am the path to the entry in the zip file to read." required="yes" type="string" />
 		
-		<cfset checkLicense() />
+		
 		
 		<cfreturn readFile(arguments.pathToZipEntry).toByteArray() />
 	</cffunction>
@@ -840,7 +801,7 @@
 		<cfset var ZipInputStream = 0 />
 		<cfset var zipFileName = normalizeEntryName(arguments.pathToZippedFile) />
 		
-		<cfset checkLicense() />
+		
 		
 		<!--- insure the file to delete exists --->
 		<cfset isFile(zipFileName) />
@@ -904,7 +865,7 @@
 		<cfset var FileOutputStream = 0 />
 		<cfset var BufferedOutputStream = 0 />
 		
-		<cfset checkLicense() />
+		
 		
 		<!--- this method only extracts files --->
 		<cfset isDirectory(normalizeEntryName(arguments.pathToZipEntry)) />		
@@ -1002,71 +963,7 @@
     <cffunction name="setKey" access="private" output="false" returntype="void">
        <cfargument name="key" hint="I am the key used to unlock the software.  This will preven the image from drawing Alagad Captcha across the image." required="yes" type="string" />
 	   
-	   <!--- validate the key --->
-	   <cfif validateKey(arguments.key, getAppText())>
-	   	 <cfset variables.licensed = true />
-	   <cfelse>
-	     <cfset variables.licensed = false />
-	   </cfif>
-    </cffunction>
-	
-	<cffunction name="getKey" access="private" output="false" returntype="string">
-		<cfargument name="initialChars" required="true" type="string" />
-		<cfargument name="appText" required="true" type="string" />
-		<cfset var md5String = "" />
-		<cfset var key = "" />
-		
-		<!--- get a hash of the string --->
-		<cfset md5String = hash(initialChars & arguments.appText) />
-		<cfset key = arguments.initialChars />
-		
-		<!--- 
-			Loop over the hash, grabing 2 chars on each look, convert them to base 10 and mod 32 the results.
-			This value is the character in the list of valid chars we will be using for this char in the resulting key.
-		--->
-		<cfloop from="1" to="32" index="i" step="2">
-			<cfset key = key & Mid(getCharString(), (InputBaseN(Mid(md5String, i, 2),16) Mod 32) + 1, 1) />
-		</cfloop>
-		
-		<cfif Len(key) IS 25>
-			<!--- add dashes --->
-			<cfset key = Insert("-", key, 20) />
-			<cfset key = Insert("-", key, 15) />
-			<cfset key = Insert("-", key, 10) />
-			<cfset key = Insert("-", key, 5) />
-		</cfif>
-		
-		<cfreturn key />
-	</cffunction>
-	
-	<!--- key related --->
-	<cffunction name="validateKey" access="private" output="false" returntype="boolean">
-		<cfargument name="key" required="true" type="string" />
-		<cfargument name="appText" required="true" type="string" />
-		<cfset var initialChars = "" />
-		
-		<!--- fix the key (remove all hyphens) --->
-		<cfset arguments.key = Replace(arguments.key, "-", "", "all") />
-	
-		<!--- grab the first 9 chars --->
-		<cfset initialChars = Left(arguments.key, 9) />
-			
-		<!--- get a key and compare to our current key  --->
-		<cfreturn Replace(getKey(initialChars, arguments.appText), "-", "", "all") IS arguments.key />
-	</cffunction>
-	
-	<!--- licensed --->
-    <cffunction name="setLicensed" access="private" output="false" returntype="void">
-       <cfargument name="licensed" hint="I indicate if the zip component is licensed." required="yes" type="boolean" />
-       <cfset variables.licensed = arguments.licensed />
-    </cffunction>
-    <cffunction name="getLicensed" access="private" output="false" returntype="boolean">
-		<cftry>
-			<cfreturn variables.licensed />
-			<cfcatch>
-				<cfset notInited() />
-			</cfcatch>
-		</cftry>
+		<!--- this is a stub for backwards compatability --->
     </cffunction>
 	
 	<!--- appText --->
