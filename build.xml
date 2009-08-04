@@ -1,0 +1,58 @@
+<project name="Build Script" default="BuildPlugin">
+	
+	<target name="BuildPlugin">
+		<input message="Please enter SVN server username:" addproperty="SVNUSERNAME" />
+		<input message="Please enter SVN server password:" addproperty="SVNPASSWORD" />
+		
+		<property name="svnUrl" value="http://svn.alagad.com/ZipComponent/trunk/"/>
+		<property name="buildDirectory" value="build" />
+		
+		<!-- delete build files -->
+		<delete dir="${buildDirectory}/distribute" failonerror="true" />
+		
+		<!-- create the build dir -->
+		<mkdir dir="${buildDirectory}/distribute"/>
+		
+		<!-- export from svn -->
+		<exec executable="svn">
+			<arg line="export ${svnUrl}/Component%20Dev/Zip.cfc --force ${buildDirectory}/distribute/Zip.cfc --username ${SVNUSERNAME} --password ${SVNPASSWORD}"/> 
+		</exec>
+		<exec executable="svn"> 
+			<arg line="export ${svnUrl}/Distribute/Documentation/ --force ${buildDirectory}/distribute/Documentation --username ${SVNUSERNAME} --password ${SVNPASSWORD}"/> 
+		</exec>
+		<exec executable="svn"> 
+			<arg line="export ${svnUrl}/Distribute/Examples --force ${buildDirectory}/distribute/Examples --username ${SVNUSERNAME} --password ${SVNPASSWORD}"/> 
+		</exec>
+		<exec executable="svn"> 
+			<arg line="export ${svnUrl}/Distribute/AlagadZipComponentLogo.gif --force ${buildDirectory}/distribute/AlagadZipComponentLogo.gif --username ${SVNUSERNAME} --password ${SVNPASSWORD}"/> 
+		</exec>
+		
+		<!-- note the current build -->
+		<exec executable="svn" outputproperty="svnInfo"> 
+			<arg line="info ${svnUrl} --username ${SVNUSERNAME} --password ${SVNPASSWORD}"/> 
+		</exec>
+		
+		<echo message="${svnInfo}" />
+		
+		<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+			<classpath>
+				<pathelement location="antlib/ant-contrib-1.0b3.jar"/>
+			</classpath>
+		</taskdef>
+		
+		<propertyregex property="BUILDREVISION"
+			input="${svnInfo}"
+			regexp="Revision: ([0-9]*)"
+			select="\1"
+			casesensitive="false" />
+		
+		<echo message="BUILDREVISION: ${BUILDREVISION}" />
+	
+		<replace dir="${buildDirectory}" token="${version}" value="2.${BUILDREVISION}"  />
+		
+		<!-- zip up the plugin -->
+		<zip destfile="${buildDirectory}/ZipComponent.zip"
+			basedir="${buildDirectory}/distribute" />	
+	</target>
+	
+</project>
